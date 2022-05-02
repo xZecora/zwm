@@ -431,12 +431,13 @@ void wkill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
 
+  client *temp = cur->prev;
   wdel(cur->w); /* delete the client from list */
 
   XKillClient(d, cur->w); /* kill the window */
 
   if (list) { /* if list exists, focus it */
-    wfocus(list);
+    wfocus(temp);
   } else {
     selmon->clients = 0; /* if not, set pointers to 0 */
     cur = 0;
@@ -718,7 +719,7 @@ void mreq(XEvent *e) {
   wadd(w, 0); /* add new window to current ws list */
 
   XMapWindow(d, w); /* map the new window the screen */
-  wfocus(list->prev); /*focus the new window */
+  wfocus(list->prev); /* focus the new window */
 }
 
 void mnot(XEvent *e) {
