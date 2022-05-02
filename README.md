@@ -12,7 +12,7 @@ If you want something more, add it! If you want some simple functionality, you c
 :heavy_check_mark: add multi-monitor functionality \
 :heavy_check_mark: make things more patch oriented \
 add more comments to make it readable as a resource \
-thinking about changing hotkeys to function more like ratpoison \
+:heavy_check_mark: thinking about changing hotkeys to function more like ratpoison (patch) \
 add more tiling layouts \
 considering making this a multi file project for readability sake
 
