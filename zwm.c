@@ -162,6 +162,8 @@ static void (*events[LASTEvent])(XEvent *e) = {
 /* Change the window focus */
 void wfocus(client *c) {
   cur = c;
+  if (!c) /* now we can handle 0 as an input */
+    return;
   XSetInputFocus(d, cur->w, RevertToParent, CurrentTime);
   XRaiseWindow(d, cur->w);
 }
@@ -395,8 +397,6 @@ void wfloatt(const Arg arg) {
   retile();
 }
 
-
-
 /* Organizes windows passed to it based on
  * their location in the list
  * Called when one is either added or destroyed
@@ -440,7 +440,7 @@ void wkill(const Arg arg) {
     wfocus(temp);
   } else {
     selmon->clients = 0; /* if not, set pointers to 0 */
-    cur = 0;
+    wfocus(0);
   }
 }
 
@@ -488,10 +488,7 @@ void wtos(const Arg arg) {
 
   ssel(tmp);
   selmon = tempmon; /* reset the active monitor */
-  if (prev)       /* focus the window before the moved one */
-    wfocus(prev);
-  else      /* or nothing if there wasn't another window */
-    cur = 0;
+  wfocus(prev);
 }
 
 /* swaps position of two windows passed to it */
@@ -676,10 +673,7 @@ void sgo(const Arg arg) {
   ssave(tmp);
 
   ssel(arg.i); /* reselect new ws */
-  if (list) /* if there is something in this new workspace, focus that thing */
-    wfocus(list);
-  else /* otherwise focus nothing */
-    cur = 0;
+  wfocus(list);
 }
 
 /* move focus to next monitor */
@@ -694,10 +688,7 @@ void mongo(const Arg arg) {
     selmon = selmon->prev;
 
   ssel(selmon->workspace); /* select the next monitors clients */
-  if (list) /* if something is in the list, focus it */
-    wfocus(list);
-  else /* otherwise focus nothing */
-    cur = 0;
+  wfocus(list);
 }
 
 /* run command given, typically a char array */

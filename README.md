@@ -16,5 +16,9 @@ add more comments to make it readable as a resource \
 add more tiling layouts \
 considering making this a multi file project for readability sake
 
+# Bugs
+- When tiling, on the fifth window, sizes get off and a small gap appears. I have an idea on fixing it but simply havent implemented it yet
+- EnterNotify xevent doesn't happen, I don't know why, help appreciated
+
 # sources
 A lot of inspiration and code taken from dwm and qpwm
