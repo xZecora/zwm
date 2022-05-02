@@ -719,6 +719,7 @@ void mreq(XEvent *e) {
   wadd(w, 0); /* add new window to current ws list */
 
   XMapWindow(d, w); /* map the new window the screen */
+  /* Must do this here, otherwise it focuses things incorrectly */
   wfocus(list->prev); /* focus the new window */
 }
 
