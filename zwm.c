@@ -267,7 +267,7 @@ void wadd(Window w, int floats) {
   /* set default window size/position in client */
   wsize(c->w, &c->wx, &c->wy, &c->ww, &c->wh);
 
-  if (lastTiled&& list) {
+  if (lastTiled && list) {
     list->prev->next = c; /* linked list adding to end logic */
     c->prev = list->prev;
     list->prev = c;
@@ -714,12 +714,11 @@ void run(const Arg arg) {
 void mreq(XEvent *e) {
   Window w = e->xmaprequest.window;
 
-  XSelectInput(d, w, StructureNotifyMask | EnterWindowMask);
   wsize(w, &wx, &wy, &ww, &wh); /* get size to draw windows, useful for dialogues */
   wadd(w, 0); /* add new window to current ws list */
-  cur = list->prev; /* focus the last element  in the list */
 
   XMapWindow(d, w); /* map the new window the screen */
+  wfocus(list->prev); /*focus the new window */
 }
 
 void mnot(XEvent *e) {
