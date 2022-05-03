@@ -87,6 +87,7 @@ void kpress(XEvent *e);
 void ndes(XEvent *e);
 void mreq(XEvent *e);
 void mnot(XEvent *e);
+void umnot(XEvent *e);
 /* Window functions */
 void wadd(Window w, int floats);
 void wkill(const Arg arg);
@@ -114,6 +115,7 @@ void retile(void);
 void drag(XEvent *e);
 void center(client *c);
 Atom agetprop(client *c, Atom prop);
+void cleanup(void);
 /* Monitor functions */
 void monsetup(void);
 monitor *checkmonfocus(int x, int y, int w, int h);
@@ -151,6 +153,7 @@ static void (*events[LASTEvent])(XEvent *e) = {
   [KeyPress]          = kpress,
   [DestroyNotify]     = ndes,
   [MappingNotify]     = mnot,
+  [UnmapNotify]       = umnot,
   [MapRequest]        = mreq
 };
 
@@ -166,6 +169,13 @@ void wfocus(client *c) {
     return;
   XSetInputFocus(d, cur->w, RevertToParent, CurrentTime);
   XRaiseWindow(d, cur->w);
+}
+
+/* Notify the WM that a window has been unmapped */
+void umnot(XEvent *e) {
+  wdel(e->xunmap.window);
+  wfocus(list);
+  // I can probably condense a lot of the unmap stuff into here
 }
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
@@ -375,6 +385,7 @@ void wdel(Window w) {
     x->prev->next = x->next;
   if (x == list)    /* if x was the head of the list, point */
     list = x->next; /* list to the new first element */
+
   XUnmapWindow(d, x->w); /* cleanup window */
   free(x);
 
@@ -833,6 +844,20 @@ void setup(void) {
       "_NET_WM_WINDOW_TYPE_DIALOG", False);
 }
 
+void cleanup(void) {
+  ssel(0);
+  int i = 0;
+  for (client *del = list; del;){
+    if (del == list)
+      list = del->next;
+    free(del);
+    if (!list) {
+      i++;
+      ssel(i);
+    }
+  }
+}
+
 int main(void) {
   XEvent ev; /* make a holder for XEvents */
   if (!(d = XOpenDisplay(0))) /* if the display isn't open, exit */
@@ -856,4 +881,7 @@ int main(void) {
   while (running && !XNextEvent(d, &ev)) /* exit when running = 0 */
     if (events[ev.type])
       events[ev.type](&ev);
+  cleanup();
+  XCloseDisplay(d);
+  return EXIT_SUCCESS;
 }
