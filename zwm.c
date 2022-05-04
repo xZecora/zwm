@@ -844,20 +844,6 @@ void setup(void) {
       "_NET_WM_WINDOW_TYPE_DIALOG", False);
 }
 
-void cleanup(void) {
-  ssel(0);
-  int i = 0;
-  for (client *del = list; del;){
-    if (del == list)
-      list = del->next;
-    free(del);
-    if (!list) {
-      i++;
-      ssel(i);
-    }
-  }
-}
-
 int main(void) {
   XEvent ev; /* make a holder for XEvents */
   if (!(d = XOpenDisplay(0))) /* if the display isn't open, exit */
@@ -881,7 +867,6 @@ int main(void) {
   while (running && !XNextEvent(d, &ev)) /* exit when running = 0 */
     if (events[ev.type])
       events[ev.type](&ev);
-  cleanup();
   XCloseDisplay(d);
   return EXIT_SUCCESS;
 }
