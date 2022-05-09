@@ -8,14 +8,14 @@ all: zwm
 
 config.h:
 	cp config.def.h config.h
-	
+
 zwm: zwm.c config.h Makefile
 	$(CC) $(CFLAGS) -o $@ $< -lX11 -lXinerama -DXINERAMA $(LDFLAGS)
-	
+
 install: all
 	install -Dm755 zwm $(DESTDIR)$(BINDIR)/zwm
-	
+
 clean:
 	rm -f zwm *.o
-	
+
 .PHONY: all install clean

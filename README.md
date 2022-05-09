@@ -19,6 +19,7 @@ considering making this a multi file project for readability sake
 # Bugs
 - When tiling, on the fifth window, sizes get off and a small gap appears. I have an idea on fixing it but simply havent implemented it yet
 - EnterNotify xevent doesn't happen, I don't know why, help appreciated
+- Similar as above, but it doesn't recieve unmap events from some windows when they exit themselves, a good example is typing exit in a terminal closes it but doesn't inform the window manager. Works in other window managers but can't figure out why it doesn't for me.
 
 # sources
 A lot of inspiration and code taken from dwm and qpwm

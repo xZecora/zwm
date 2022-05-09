@@ -120,8 +120,6 @@ void cleanup(void);
 void monsetup(void);
 monitor *checkmonfocus(int x, int y, int w, int h);
 
-static int xerror() { return 0; }
-
 static Atom netatom[NetLast];
 
 /* initialize initial client list, the workspace list, and cur client
@@ -146,21 +144,25 @@ static int running = 1;
 static monitor *monlist = {0}, *selmon;
 
 /* List of valid XEvents */
-static void (*events[LASTEvent])(XEvent *e) = {
+static void (*events[LASTEvent])(XEvent *) = {
   [ButtonPress]       = bpress,
   [ButtonRelease]     = brelease,
   [MotionNotify]      = drag,
   [KeyPress]          = kpress,
   [DestroyNotify]     = ndes,
-  [MappingNotify]     = mnot,
   [UnmapNotify]       = umnot,
-  [MapRequest]        = mreq
+  [MapRequest]        = mreq,
+  [MappingNotify]     = mnot
 };
 
 #ifndef CONFIG_H
 /* Load config.h for custom user configs */
 #include "config.h"
 #endif
+
+static int xerror() {
+  return 0;
+}
 
 /* Change the window focus */
 void wfocus(client *c) {
@@ -172,16 +174,17 @@ void wfocus(client *c) {
 }
 
 /* Notify the WM that a window has been unmapped */
+/* i am straight up just not recieving some events that other window managers are recieving and i have 0 ideas
+   why this is happening */
 void umnot(XEvent *e) {
+
   wdel(e->xunmap.window);
   wfocus(list);
-  // I can probably condense a lot of the unmap stuff into here
 }
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
 void ndes(XEvent *e) {
   wdel(e->xdestroywindow.window); /* call wdel when ndes happens */
-
   if (list) /* if list isn't empty, focus prev element */
     wfocus(list->prev);
 }
@@ -831,8 +834,7 @@ void monsetup(void) {
 
 /* Switches the running variable to 0 to quit on command */
 void quit(const Arg arg) {
-  if (!arg.i)
-    running = 0;
+  running = 0;
 }
 
 /* sets up some important things we need for properties right now */
@@ -867,6 +869,7 @@ int main(void) {
   while (running && !XNextEvent(d, &ev)) /* exit when running = 0 */
     if (events[ev.type])
       events[ev.type](&ev);
+
   XCloseDisplay(d);
   return EXIT_SUCCESS;
 }
