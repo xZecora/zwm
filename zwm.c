@@ -79,7 +79,6 @@ struct monitor {
   monitor *next, *prev;
 };
 
-
 /* XEvents */
 void bpress(XEvent *e);
 void brelease(XEvent *e);
@@ -88,6 +87,7 @@ void ndes(XEvent *e);
 void mreq(XEvent *e);
 void mnot(XEvent *e);
 void umnot(XEvent *e);
+
 /* Window functions */
 void wadd(Window w, int floats);
 void wkill(const Arg arg);
@@ -100,11 +100,13 @@ void wmovedown(const Arg arg); /* move window down in workspace Notify functions
 void wtype(client *c);
 void wswap(client *initial, client *swapto);
 void wfloatt(const Arg arg);
+
 /* Workspace functions */
 void wtos(const Arg arg);
 void sgo(const Arg arg);
 void mongo(const Arg arg);
 monitor *wactivemon(int space);
+
 /* WM functions */
 void input_grab(Window root);
 void quit(const Arg arg);
@@ -144,25 +146,22 @@ static int running = 1;
 static monitor *monlist = {0}, *selmon;
 
 /* List of valid XEvents */
-static void (*events[LASTEvent])(XEvent *) = {
+static void (*events[LASTEvent])(XEvent *e) = {
+  [DestroyNotify]     = ndes,
   [ButtonPress]       = bpress,
   [ButtonRelease]     = brelease,
-  [MotionNotify]      = drag,
   [KeyPress]          = kpress,
-  [DestroyNotify]     = ndes,
+  [MotionNotify]      = drag,
   [UnmapNotify]       = umnot,
   [MapRequest]        = mreq,
-  [MappingNotify]     = mnot
-};
+  [MappingNotify]     = mnot};
 
 #ifndef CONFIG_H
 /* Load config.h for custom user configs */
 #include "config.h"
 #endif
 
-static int xerror() {
-  return 0;
-}
+static int xerror() { return 0; }
 
 /* Change the window focus */
 void wfocus(client *c) {
@@ -171,13 +170,13 @@ void wfocus(client *c) {
     return;
   XSetInputFocus(d, cur->w, RevertToParent, CurrentTime);
   XRaiseWindow(d, cur->w);
+
 }
 
 /* Notify the WM that a window has been unmapped */
 /* i am straight up just not recieving some events that other window managers are recieving and i have 0 ideas
    why this is happening */
 void umnot(XEvent *e) {
-
   wdel(e->xunmap.window);
   wfocus(list);
 }
@@ -726,6 +725,9 @@ void mreq(XEvent *e) {
   XMapWindow(d, w); /* map the new window the screen */
   /* Must do this here, otherwise it focuses things incorrectly */
   wfocus(list->prev); /* focus the new window */
+  /* this bit makes sure that windows who close themselves are properly handled */
+  XSetWMProtocols(d, w, &netatom[WMDelete], 1);
+  XSelectInput(d, w, StructureNotifyMask);
 }
 
 void mnot(XEvent *e) {
@@ -844,6 +846,8 @@ void setup(void) {
       "_NET_WM_WINDOW_TYPE", False);
   netatom[NetWMWindowTypeDialog] = XInternAtom(d,\
       "_NET_WM_WINDOW_TYPE_DIALOG", False);
+  netatom[WMDelete] = XInternAtom(d,\
+      "WM_DELETE_WINDOW", False);
 }
 
 int main(void) {
