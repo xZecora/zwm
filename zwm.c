@@ -232,6 +232,7 @@ void drag(XEvent *e) {
       MAX(1, cur->wh + (mouse.button == 3 ? yd : 0)));
 }
 
+/* returns the index of the workspace the provided window is part of */
 int WindowWorkSpace(Window w) {
   int wws = 0;
   int con = 1;
