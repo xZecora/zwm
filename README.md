@@ -20,4 +20,3 @@ considering making this a multi file project for readability sake
 
 # sources
 A lot of inspiration and code taken from dwm and qpwm
-test
