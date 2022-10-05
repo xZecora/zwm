@@ -100,6 +100,7 @@ void wmovedown(const Arg arg); /* move window down in workspace Notify functions
 void wtype(client *c);
 void wswap(client *initial, client *swapto);
 void wfloatt(const Arg arg);
+int WindowWorkSpace(Window w);
 
 /* Workspace functions */
 void wtos(const Arg arg);
@@ -174,11 +175,8 @@ void wfocus(client *c) {
 }
 
 /* Notify the WM that a window has been unmapped */
-/* i am straight up just not recieving some events that other window managers are recieving and i have 0 ideas
-   why this is happening */
+/* keeping in case I need it later */
 void umnot(XEvent *e) {
-  wdel(e->xunmap.window);
-  wfocus(list);
 }
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
@@ -232,6 +230,24 @@ void drag(XEvent *e) {
       cur->wy + (mouse.button == 1 ? yd : 0),\
       MAX(1, cur->ww + (mouse.button == 3 ? xd : 0)),\
       MAX(1, cur->wh + (mouse.button == 3 ? yd : 0)));
+}
+
+int WindowWorkSpace(Window w) {
+  int wws = 0;
+  int con = 1;
+  for (; wws < 10 && con; wws++){
+    client *clist = slist[wws];
+    client *curc = clist;
+
+    for (client *t = 0; curc && t != clist->prev && con; t = curc, curc = curc->next)
+      if(curc->w == w)
+        con = False;
+  }
+
+  //if (con)
+  //  running = 0;
+
+  return wws - 1;
 }
 
 /* add a window and organize it into the tiling scheme */
@@ -371,6 +387,9 @@ void retile(void) {
 /* Delete a client and reformat tiling scheme to account it for */
 void wdel(Window w) {
   client *x = 0; /* initialize holder for deleted client */
+  int wws = WindowWorkSpace(w);
+
+  ssel(wws);
 
   for win {
     if (c->w == w) /* iterate through windows until you */
@@ -379,6 +398,7 @@ void wdel(Window w) {
 
   if (!list || !x) /* do nothing if list is empty or window not found */
     return;
+
   if (x->prev == x) /* check if x is the only element */
     list = 0;
   if (x->next) /* if x->next is defined, redefine its prev pointer */
@@ -394,7 +414,8 @@ void wdel(Window w) {
   if (list)
     retile();
 
-  ssave(ws); /* finalize and save current list to ws */
+  ssave(wws); /* finalize and save current list to ws */
+  ssel(ws);
 }
 
 /* toggles a windows floating status and resorts all
@@ -462,7 +483,7 @@ monitor *wactivemon(int space) {
   monitor *activemon = 0;
   int n = 0;
   monitor *curmon = monlist;
-  while (curmon != monlist || n ==0) {
+  while (curmon != monlist || n == 0) {
     if (curmon->workspace == space)
       activemon = curmon;
     n++;
