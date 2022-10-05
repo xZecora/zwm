@@ -100,7 +100,7 @@ void wmovedown(const Arg arg); /* move window down in workspace Notify functions
 void wtype(client *c);
 void wswap(client *initial, client *swapto);
 void wfloatt(const Arg arg);
-int WindowWorkSpace(Window w);
+int windowws(Window w);
 
 /* Workspace functions */
 void wtos(const Arg arg);
@@ -233,7 +233,7 @@ void drag(XEvent *e) {
 }
 
 /* returns the index of the workspace the provided window is part of */
-int WindowWorkSpace(Window w) {
+int windowws(Window w) {
   int wws = 0;
   int con = 1;
   for (; wws < 10 && con; wws++){
@@ -388,7 +388,7 @@ void retile(void) {
 /* Delete a client and reformat tiling scheme to account it for */
 void wdel(Window w) {
   client *x = 0; /* initialize holder for deleted client */
-  int wws = WindowWorkSpace(w);
+  int wws = windowws(w);
 
   ssel(wws);
 
