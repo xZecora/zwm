@@ -6,7 +6,7 @@ CC     ?= gcc
 
 all: zwm
 
-config.h:
+config:
 	cp config.def.h config.h
 
 zwm: zwm.c config.h Makefile
