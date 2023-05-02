@@ -15,6 +15,8 @@ void wfocus(client *c) {
 /* Notify the WM that a window has been unmapped */
 /* keeping in case I need it later */
 void umnot(XEvent *e) {
+  //wdel(e->xunmap.window);
+  //wfocus(list);
 }
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
@@ -226,6 +228,7 @@ void retile(void) {
 /* Delete a client and reformat tiling scheme to account it for */
 void wdel(Window w){
   client *x = 0; /* initialize holder for deleted client */
+  int temp = ws;
   int wws = windowws(w);
 
   ssel(wws);
@@ -254,7 +257,7 @@ void wdel(Window w){
     retile();
 
   ssave(wws); /* finalize and save current list to ws */
-  ssel(ws);
+  ssel(temp);
 }
 
 /* toggles a windows floating status and resorts all
@@ -300,14 +303,39 @@ void organize(client *current, client *previous, int n) {
 
 
 /* Kills windows */
+/* The whole idea here right now is that I don't want to rely on wdel to delete the current window because it causes issues sometimes and overcomplicates it. For some reason i don't fully understand right now, XKillClient is making my shit crash after deleting two or three windows from a ws consecutively. I think so at least, it might be some weird butterfly effect i can't see in the Xlib source code. This like almost works and i hate that it doesn't quite. */
 void wkill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
 
-  client *temp = cur->prev;
-  wdel(cur->w); /* delete the client from list */
+  client *temp;
+  client *hold = cur;
+  if (cur == list->prev)
+    temp = cur->prev;
+  else
+    temp = cur->next;
 
-  XKillClient(d, cur->w); /* kill the window */
+  //wfocus(temp);
+
+  if (hold->prev == hold) /* check if x is the only element */
+    list = 0;
+  if (hold->next) /* if x->next is defined, redefine its prev pointer */
+    hold->next->prev = hold->prev;
+  if (hold->prev) /* if x->prev is defined, redefine its next pointer */
+    hold->prev->next = hold->next;
+  if (hold == list)    /* if x was the head of the list, point */
+    list = hold->next; /* list to the new first element */
+
+  XUnmapWindow(d, hold->w); /* cleanup window */
+
+  free(hold);
+
+  if (list)
+    retile();
+
+  XKillClient(d, hold->w);
+
+  //wdel(cur->w); /* delete the client from list */
 
   if (list) { /* if list exists, focus it */
     wfocus(temp);

@@ -1,4 +1,5 @@
 # zwm: my attempt at a tiling WM
+### Should I move to rust?
 
 - tiles
 - floating windows
