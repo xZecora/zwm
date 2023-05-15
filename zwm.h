@@ -12,6 +12,9 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 
+#define KILL_WINDOW_TRUE 1
+#define KILL_WINDOW_FALSE 0
+
 /* shorthand larger/smaller of two items */
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
@@ -91,7 +94,7 @@ void umnot(XEvent *e);
 /* Window functions */
 void wadd(Window w, int floats);
 void wkill(const Arg arg);
-void wdel(Window w);
+void wdel(Window w, int kill);
 void wfocus(client *c);
 void wprev(const Arg arg);
 void wnext(const Arg arg);

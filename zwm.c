@@ -4,12 +4,17 @@ static int xerror() { return 0; }
 
 /* Change the window focus */
 void wfocus(client *c) {
-  cur = c;
   if (!c) /* now we can handle 0 as an input */
     return;
+
+  cur = c;
+
+  int wws = windowws(c->w);
+  if(wws != ws)
+    ssel(wws);
+
   XSetInputFocus(d, cur->w, RevertToParent, CurrentTime);
   XRaiseWindow(d, cur->w);
-
 }
 
 /* Notify the WM that a window has been unmapped */
@@ -21,7 +26,7 @@ void umnot(XEvent *e) {
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
 void ndes(XEvent *e) {
-  wdel(e->xdestroywindow.window); /* call wdel when ndes happens */
+  wdel(e->xdestroywindow.window, KILL_WINDOW_FALSE); /* call wdel when ndes happens */
   if (list) /* if list isn't empty, focus prev element */
     wfocus(list->prev);
 }
@@ -226,7 +231,7 @@ void retile(void) {
 }
 
 /* Delete a client and reformat tiling scheme to account it for */
-void wdel(Window w){
+void wdel(Window w, int kill){
   client *x = 0; /* initialize holder for deleted client */
   int temp = ws;
   int wws = windowws(w);
@@ -251,6 +256,10 @@ void wdel(Window w){
     list = x->next; /* list to the new first element */
 
   XUnmapWindow(d, x->w); /* cleanup window */
+
+  if (kill)
+    XKillClient(d, x->w);
+
   free(x);
 
   if (list)
@@ -303,39 +312,50 @@ void organize(client *current, client *previous, int n) {
 
 
 /* Kills windows */
-/* The whole idea here right now is that I don't want to rely on wdel to delete the current window because it causes issues sometimes and overcomplicates it. For some reason i don't fully understand right now, XKillClient is making my shit crash after deleting two or three windows from a ws consecutively. I think so at least, it might be some weird butterfly effect i can't see in the Xlib source code. This like almost works and i hate that it doesn't quite. */
+/* The whole idea here right now is that I don't want to rely on wdel to delete the current window because it causes issues sometimes and overcomplicates it, but I think I found a decent solution. This like almost works and i hate that it doesn't quite. After deleting one window, its fine, but then deleting a second seems to unfocus me from the stack */
 void wkill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
 
   client *temp;
-  client *hold = cur;
-  if (cur == list->prev)
+  if (list && cur == list->prev){
     temp = cur->prev;
-  else
+  } else {
     temp = cur->next;
+  }
 
-  //wfocus(temp);
+  // i dont like this implementation but i used it
+  wdel(cur->w, KILL_WINDOW_TRUE);
 
-  if (hold->prev == hold) /* check if x is the only element */
-    list = 0;
-  if (hold->next) /* if x->next is defined, redefine its prev pointer */
-    hold->next->prev = hold->prev;
-  if (hold->prev) /* if x->prev is defined, redefine its next pointer */
-    hold->prev->next = hold->next;
-  if (hold == list)    /* if x was the head of the list, point */
-    list = hold->next; /* list to the new first element */
+  ////wfocus(temp);
 
-  XUnmapWindow(d, hold->w); /* cleanup window */
+  //if (hold->prev == hold) /* check if x is the only element */
+  //  list = 0;
+  //else {
+  //  if (hold->next) /* if x->next is defined, redefine its prev pointer */
+  //    hold->next->prev = hold->prev;
+  //  if (hold->prev) /* if x->prev is defined, redefine its next pointer */
+  //    hold->prev->next = hold->next;
+  //  if (hold == list)    /* if x was the head of the list, point */
+  //    list = hold->next; /* list to the new first element */
+  //}
 
-  free(hold);
+  //XUnmapWindow(d, hold->w); /* cleanup window */
 
-  if (list)
-    retile();
+  ////free(hold);
 
-  XKillClient(d, hold->w);
+  //if (list)
+  //  retile();
 
-  //wdel(cur->w); /* delete the client from list */
+  //XKillClient(d, hold->w);
+
+  ////wdel(cur->w); /* delete the client from list */
+  //free(hold);
+
+  /* This block is temp debugging code. I'm going to sleep. */
+  ssel(ws);
+  list = temp;
+  wfocus(list);
 
   if (list) { /* if list exists, focus it */
     wfocus(temp);
@@ -372,7 +392,7 @@ void wtos(const Arg arg) {
   if (cur->prev != cur)
     prev = cur->prev;
 
-  wdel(cur->w); /* delete window just moved */
+  wdel(cur->w, KILL_WINDOW_FALSE); /* delete window just moved */
   XUnmapWindow(d, cur->w); /* unmap old window */
   ssave(tmp); /* save initial workspace */
 
