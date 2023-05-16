@@ -18,6 +18,8 @@ add more tiling layouts \
 considering making this a multi file project for readability sake
 
 # Bugs
+- errors when spamming hotkey presses, at least as far as I can tell thats the issue.
+- sometimes windows can become disconnected from list and are not unmapped when switching workspaces.
 
 # sources
 A lot of inspiration and code taken from dwm and qpwm
