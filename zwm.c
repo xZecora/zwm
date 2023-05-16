@@ -316,6 +316,7 @@ void organize(client *current, client *previous, int n) {
 void wkill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
+  ssel(ws);
 
   client *temp;
   if (list && cur == list->prev){
@@ -327,7 +328,17 @@ void wkill(const Arg arg) {
   // i dont like this implementation but i used it
   wdel(cur->w, KILL_WINDOW_TRUE);
 
-  wfocus(temp);
+  /* For whatever reason list can get undefined at this point, must reset it properly */
+  if(temp)
+    ssel(windowws(temp->w));
+
+  if(temp) {
+    wfocus(temp);
+  } else {
+    selmon->clients = 0;
+    wfocus(0);
+  }
+  //wfocus(temp);
 
   /* this is all unnecessary but I'm afraid to delete it */
 
@@ -596,7 +607,13 @@ void sgo(const Arg arg) {
   ssave(tmp);
 
   ssel(arg.i); /* reselect new ws */
-  wfocus(list);
+  /* if new workspaces list doesn't exist, clear current selected window */
+  if(list) {
+    wfocus(list);
+  } else {
+    cur = 0;
+    wfocus(0);
+  }
 }
 
 /* move focus to next monitor */
