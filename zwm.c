@@ -327,7 +327,9 @@ void wkill(const Arg arg) {
   // i dont like this implementation but i used it
   wdel(cur->w, KILL_WINDOW_TRUE);
 
-  ////wfocus(temp);
+  wfocus(temp);
+
+  /* this is all unnecessary but I'm afraid to delete it */
 
   //if (hold->prev == hold) /* check if x is the only element */
   //  list = 0;
@@ -353,16 +355,16 @@ void wkill(const Arg arg) {
   //free(hold);
 
   /* This block is temp debugging code. I'm going to sleep. */
-  ssel(ws);
-  list = temp;
-  wfocus(list);
+  //ssel(ws);
+  //list = temp;
+  //wfocus(list);
 
-  if (list) { /* if list exists, focus it */
-    wfocus(temp);
-  } else {
-    selmon->clients = 0; /* if not, set pointers to 0 */
-    wfocus(0);
-  }
+  //if (list) { /* if list exists, focus it */
+  //  wfocus(temp);
+  //} else {
+  //  selmon->clients = 0; /* if not, set pointers to 0 */
+  //  wfocus(0);
+  //}
 }
 
 /* returns the active monitor for a given workspace number */
