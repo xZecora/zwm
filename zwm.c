@@ -489,7 +489,7 @@ void wmovedown(const Arg arg) {
   if (!list || list->next == list)
     return;
 
-  wswap(cur, cur->next); /* call wswap to swap their physical positions */
+  wswap(cur, cur->prev); /* call wswap to swap their physical positions */
 
   /* this swaps the list positions of the two nodes youre swapping */
   client* temp = cur->prev;
