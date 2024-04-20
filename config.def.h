@@ -16,15 +16,15 @@ const char *term[] = {"st", 0};
 static struct key keys[] = {
     {MOD, XK_q, wkill, {0}},
 
-    {MOD, XK_h, wprev, {0}},
-    {MOD, XK_l, wnext, {0}},
-    {MOD, XK_j, wmoveup, {0}},
-    {MOD, XK_k, wmovedown, {0}},
+    {MOD, XK_n, wprev, {0}},
+    {MOD, XK_o, wnext, {0}},
+    {MOD, XK_e, wmoveup, {0}},
+    {MOD, XK_i, wmovedown, {0}},
 
     /* May want to switch these to be more comfortable with your monitor setup */
     /* 0/1 changes the direction you swap to */
-    {MOD | ShiftMask, XK_h, mongo, {.i = 1}},
-    {MOD | ShiftMask, XK_l, mongo, {.i = 0}},
+    {MOD | ShiftMask, XK_n, mongo, {.i = 1}},
+    {MOD | ShiftMask, XK_o, mongo, {.i = 0}},
 
     {MOD, XK_f, wfloatt, {0}},
 

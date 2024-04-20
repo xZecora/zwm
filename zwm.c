@@ -316,7 +316,6 @@ void organize(client *current, client *previous, int n) {
 void wkill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
-  ssel(ws);
 
   client *temp;
   if (list && cur == list->prev){
@@ -325,57 +324,36 @@ void wkill(const Arg arg) {
     temp = cur->next;
   }
 
-  // i dont like this implementation but i used it
-  wdel(cur->w, KILL_WINDOW_TRUE);
+  client *x = 0; /* initialize holder for deleted client */
 
-  /* For whatever reason list can get undefined at this point, must reset it properly */
-  if(temp)
-    ssel(windowws(temp->w));
+  x = cur;
 
-  if(temp) {
+  if (x->prev == x) /* check if x is the only element */
+    list = 0;
+  else{
+    if (x->next) /* if x->next is defined, redefine its prev pointer */
+      x->next->prev = x->prev;
+    if (x->prev) /* if x->prev is defined, redefine its next pointer */
+      x->prev->next = x->next;
+    if (x == list)    /* if x was the head of the list, point */
+      list = x->next; /* list to the new first element */
+  }
+
+  XUnmapWindow(d, x->w); /* cleanup window */
+
+  free(x);
+
+  if (list)
+    retile();
+
+  ssave(ws); /* finalize and save current list to ws */
+
+  if(list) {
     wfocus(temp);
   } else {
     selmon->clients = 0;
-    wfocus(0);
+    cur = 0;
   }
-  //wfocus(temp);
-
-  /* this is all unnecessary but I'm afraid to delete it */
-
-  //if (hold->prev == hold) /* check if x is the only element */
-  //  list = 0;
-  //else {
-  //  if (hold->next) /* if x->next is defined, redefine its prev pointer */
-  //    hold->next->prev = hold->prev;
-  //  if (hold->prev) /* if x->prev is defined, redefine its next pointer */
-  //    hold->prev->next = hold->next;
-  //  if (hold == list)    /* if x was the head of the list, point */
-  //    list = hold->next; /* list to the new first element */
-  //}
-
-  //XUnmapWindow(d, hold->w); /* cleanup window */
-
-  ////free(hold);
-
-  //if (list)
-  //  retile();
-
-  //XKillClient(d, hold->w);
-
-  ////wdel(cur->w); /* delete the client from list */
-  //free(hold);
-
-  /* This block is temp debugging code. I'm going to sleep. */
-  //ssel(ws);
-  //list = temp;
-  //wfocus(list);
-
-  //if (list) { /* if list exists, focus it */
-  //  wfocus(temp);
-  //} else {
-  //  selmon->clients = 0; /* if not, set pointers to 0 */
-  //  wfocus(0);
-  //}
 }
 
 /* returns the active monitor for a given workspace number */
