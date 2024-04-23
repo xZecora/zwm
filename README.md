@@ -13,9 +13,9 @@ If you want something more, add it! If you want some simple functionality, you c
 - [x] make things more patch oriented
 - [ ] add more comments to make it readable as a resource
 - [x] thinking about changing hotkeys to function more like ratpoison (patch)
-~~- [ ] add more tiling layouts~~
+- [ ] ~~add more tiling layouts~~
 - [ ] forget tiling layouts, I love frames so much, let's implement them
-- [ ] <span style="font-size:0.5em;">...okay maybe that'll just be a patch, lets add more tiling patterns</span>
+    - [ ] ...okay maybe that'll just be a patch, lets add more tiling patterns
 - [ ] considering making this a multi file project for readability sake
 
 # Bugs
