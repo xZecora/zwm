@@ -3,13 +3,13 @@
 static int xerror() { return 0; }
 
 /* Change the window focus */
-void wfocus(client *c) {
+void window_focus(client *c) {
   if (!c) /* now we can handle 0 as an input */
     return;
 
   cur = c;
 
-  int wws = windowws(c->w);
+  int wws = window_workspace(c->w);
   if(wws != ws)
     ssel(wws);
 
@@ -19,21 +19,21 @@ void wfocus(client *c) {
 
 /* Notify the WM that a window has been unmapped */
 /* keeping in case I need it later */
-void umnot(XEvent *e) {
+void unmap_notify(XEvent *e) {
   //wdel(e->xunmap.window);
   //wfocus(list);
 }
 
 /* Notify the WM that a window should be deleted, delete it, the focus the last window */
-void ndes(XEvent *e) {
-  wdel(e->xdestroywindow.window, KILL_WINDOW_FALSE); /* call wdel when ndes happens */
+void notify_destroy(XEvent *e) {
+  window_delete(e->xdestroywindow.window, KILL_WINDOW_FALSE); /* call wdel when ndes happens */
   if (list) /* if list isn't empty, focus prev element */
-    wfocus(list->prev);
+    window_focus(list->prev);
 }
 
 /* Check when a key was pressed and determine if its one of the
  * defined hotkeys, then run its function if it was */
-void kpress(XEvent *e) {
+void key_press(XEvent *e) {
   KeySym keysym = XkbKeycodeToKeysym(d, e->xkey.keycode, 0, 0);
 
   for (unsigned int i = 0; i < sizeof(keys) / sizeof(*keys); ++i)
@@ -43,7 +43,7 @@ void kpress(XEvent *e) {
 }
 
 /* inform the WM that a button has been pressed */
-void bpress(XEvent *e) {
+void button_press(XEvent *e) {
   if (!e->xbutton.subwindow || e->xbutton.subwindow != cur->w)
     return;
 
@@ -54,7 +54,7 @@ void bpress(XEvent *e) {
 }
 
 /* inform the WM that a button has been released */
-void brelease(XEvent *e) {
+void button_release(XEvent *e) {
   mouse.subwindow = 0;
 }
 
@@ -78,7 +78,7 @@ void drag(XEvent *e) {
 }
 
 /* returns the index of the workspace the provided window is part of */
-int windowws(Window w) {
+int window_workspace(Window w) {
   int wws = 0;
   int con = 1;
   for (; wws < 10 && con; wws++){
@@ -97,7 +97,7 @@ int windowws(Window w) {
 }
 
 /* add a window and organize it into the tiling scheme */
-void wadd(Window w, int floats) {
+void window_add(Window w, int floats) {
   int n = 0; /* variable used count number of clients */
 
   if (list) { /* do any windows even exist */
@@ -136,7 +136,7 @@ void wadd(Window w, int floats) {
   c->mon = selmon;
   c->w = w; /* set window of new client to new window */
   if (!floats)
-    wtype(c);
+    window_type(c);
   else
     c->floating = floats;
 
@@ -180,7 +180,7 @@ void wadd(Window w, int floats) {
   }
 
   ssave(ws); /* finalize and save the ws list */
-  wfocus(c);
+  window_focus(c);
 }
 
 /* takes a client and centers it in the middle of the screen */
@@ -231,10 +231,10 @@ void retile(void) {
 }
 
 /* Delete a client and reformat tiling scheme to account it for */
-void wdel(Window w, int kill){
+void window_delete(Window w, int kill){
   client *x = 0; /* initialize holder for deleted client */
   int temp = ws;
-  int wws = windowws(w);
+  int wws = window_workspace(w);
 
   ssel(wws);
 
@@ -271,7 +271,7 @@ void wdel(Window w, int kill){
 
 /* toggles a windows floating status and resorts all
  * the other windows tiling to account */
-void wfloatt(const Arg arg) {
+void window_float_toggle(const Arg arg) {
   if (!cur)
     return;
   if (cur->floating)
@@ -312,8 +312,8 @@ void organize(client *current, client *previous, int n) {
 
 
 /* Kills windows */
-/* The whole idea here right now is that I don't want to rely on wdel to delete the current window because it causes issues sometimes and overcomplicates it, but I think I found a decent solution. This like almost works and i hate that it doesn't quite. After deleting one window, its fine, but then deleting a second seems to unfocus me from the stack */
-void wkill(const Arg arg) {
+/* The whole idea here right now is that I don't want to rely on wdel to delete the current window because it causes issues sometimes and overcomplicates it, but I think I found a decent solution. This like almost works and i hate that it doesn't quite. After deleting one window, its fine, but then deleting a second seems to unfocus me from the stacK */
+void window_kill(const Arg arg) {
   if (!cur) /* only kill if a window is focused, otherwise exit */
     return;
 
@@ -339,17 +339,18 @@ void wkill(const Arg arg) {
       list = x->next; /* list to the new first element */
   }
 
+  if (list)
+    retile();
+
+  /* Do this after retiling so we don't get weird display with a blank frame */
   XUnmapWindow(d, x->w); /* cleanup window */
 
   free(x);
 
-  if (list)
-    retile();
-
   ssave(ws); /* finalize and save current list to ws */
 
   if(list) {
-    wfocus(temp);
+    window_focus(temp);
   } else {
     selmon->clients = 0;
     cur = 0;
@@ -357,7 +358,7 @@ void wkill(const Arg arg) {
 }
 
 /* returns the active monitor for a given workspace number */
-monitor *wactivemon(int space) {
+monitor *workspaces_monitor(int space) {
   monitor *activemon = 0;
   int n = 0;
   monitor *curmon = monlist;
@@ -371,7 +372,7 @@ monitor *wactivemon(int space) {
 }
 
 /* Moves windows between workspaces */
-void wtos(const Arg arg) {
+void window_to_workspace(const Arg arg) {
   if (!list || arg.i == selmon->workspace || !cur) /* if this isn't here, will send empty */
     return;  /* clients */
 
@@ -383,15 +384,15 @@ void wtos(const Arg arg) {
   if (cur->prev != cur)
     prev = cur->prev;
 
-  wdel(cur->w, KILL_WINDOW_FALSE); /* delete window just moved */
+  window_delete(cur->w, KILL_WINDOW_FALSE); /* delete window just moved */
   XUnmapWindow(d, cur->w); /* unmap old window */
   ssave(tmp); /* save initial workspace */
 
   ssel(arg.i); /* focus new workspace */
 
-  if (!(selmon = wactivemon(arg.i))) /* try and set selmon to mon the workspace is in */
+  if (!(selmon = workspaces_monitor(arg.i))) /* try and set selmon to mon the workspace is in */
     selmon = tempmon; /* if the workspace is inactive, default to original mon */
-  wadd(window, f); /* add window to new workspace */
+  window_add(window, f); /* add window to new workspace */
 
   if (selmon->workspace == arg.i) /* if selmon has the desired workspace, */
     XMapWindow(d, window);                /* map the window */
@@ -400,11 +401,11 @@ void wtos(const Arg arg) {
 
   ssel(tmp);
   selmon = tempmon; /* reset the active monitor */
-  wfocus(prev);
+  window_focus(prev);
 }
 
 /* swaps position of two windows passed to it */
-void wswap(client *initial, client *swapto) {
+void window_swap(client *initial, client *swapto) {
   /* if they're the same, do nothing */
   if (initial == swapto)
     return;
@@ -440,12 +441,12 @@ void wswap(client *initial, client *swapto) {
 
 /* swaps the current window with the one above it in the list
  * arg is a filler parameter */
-void wmoveup(const Arg arg) {
+void window_move_up(const Arg arg) {
   /* if list is empty or only one element, exit */
   if (!list || list->next == list)
     return;
 
-  wswap(cur, cur->next); /* call wswap to swap their physical positions */
+  window_swap(cur, cur->next); /* call wswap to swap their physical positions */
 
   /* this swaps the list positions of the two nodes youre swapping */
   client* temp = cur->next;
@@ -462,12 +463,12 @@ void wmoveup(const Arg arg) {
 }
 
 /* will be very similar to w move up, probably will refactor code into a helper function for the two */
-void wmovedown(const Arg arg) {
+void window_move_down(const Arg arg) {
   /* if list is empty or only one element, exit */
   if (!list || list->next == list)
     return;
 
-  wswap(cur, cur->prev); /* call wswap to swap their physical positions */
+  window_swap(cur, cur->prev); /* call wswap to swap their physical positions */
 
   /* this swaps the list positions of the two nodes youre swapping */
   client* temp = cur->prev;
@@ -484,23 +485,23 @@ void wmovedown(const Arg arg) {
 }
 
 /* Focus the previous window */
-void wprev(const Arg arg) {
+void window_prev(const Arg arg) {
   if (!cur) /* check if a window is currently focused */
     return;
 
-  wfocus(cur->prev); /* if a window is focused, focus its prev element */
+  window_focus(cur->prev); /* if a window is focused, focus its prev element */
 }
 
 /* Focus the next window */
-void wnext(const Arg arg) {
+void window_next(const Arg arg) {
   if (!cur) /* check if a window is currently focused */
     return;
 
-  wfocus(cur->next); /* if a window is focused, focus its next element */
+  window_focus(cur->next); /* if a window is focused, focus its next element */
 }
 
 /* checks if it should be floating and sets it be floating if it is */
-void wtype(client *c) {
+void window_type(client *c) {
   Atom wtype = agetprop(c, netatom[NetWMWindowType]);
 
   if (wtype == netatom[NetWMWindowTypeDialog]) {
@@ -509,9 +510,11 @@ void wtype(client *c) {
 }
 
 /* Focus passed workspace number */
-void sgo(const Arg arg) {
+void go_to_workspace(const Arg arg) {
   if (arg.i == ws) /* return if moving to current workspace */
     return;
+
+  fslist[ws] = cur;
 
   int tmp = selmon->workspace;  /* initialize a temp store for current ws */
 
@@ -586,16 +589,15 @@ void sgo(const Arg arg) {
 
   ssel(arg.i); /* reselect new ws */
   /* if new workspaces list doesn't exist, clear current selected window */
-  if(list) {
-    wfocus(list);
+  if(fslist[ws]) {
+    window_focus(fslist[ws]);
   } else {
     cur = 0;
-    wfocus(0);
   }
 }
 
 /* move focus to next monitor */
-void mongo(const Arg arg) {
+void go_to_monitor(const Arg arg) {
   if (selmon == selmon->next) /* if moving to current monitor, return */
     return;
 
@@ -606,7 +608,7 @@ void mongo(const Arg arg) {
     selmon = selmon->prev;
 
   ssel(selmon->workspace); /* select the next monitors clients */
-  wfocus(list);
+  window_focus(list);
 }
 
 /* run command given, typically a char array */
@@ -621,21 +623,21 @@ void run(const Arg arg) {
   execvp((char *)arg.com[0], (char **)arg.com);
 }
 
-void mreq(XEvent *e) {
+void map_request(XEvent *e) {
   Window w = e->xmaprequest.window;
 
   wsize(w, &wx, &wy, &ww, &wh); /* get size to draw windows, useful for dialogues */
-  wadd(w, 0); /* add new window to current ws list */
+  window_add(w, 0); /* add new window to current ws list */
 
   XMapWindow(d, w); /* map the new window the screen */
   /* Must do this here, otherwise it focuses things incorrectly */
-  wfocus(list->prev); /* focus the new window */
+  window_focus(list->prev); /* focus the new window */
   /* this bit makes sure that windows who close themselves are properly handled */
   XSetWMProtocols(d, w, &netatom[WMDelete], 1);
   XSelectInput(d, w, StructureNotifyMask);
 }
 
-void mnot(XEvent *e) {
+void map_notify(XEvent *e) {
   XMappingEvent *ev = &e->xmapping;
 
   if (ev->request == MappingKeyboard || ev->request == MappingModifier) {
@@ -686,7 +688,7 @@ Atom agetprop(client *c, Atom prop) {
 }
 
 /* setup monitors to have independent windowing */
-void monsetup(void) {
+void monitor_setup(void) {
 #ifdef XINERAMA /* XINERAMA */
   if (XineramaIsActive(d)) {
     int scount = 0;
@@ -769,7 +771,7 @@ int main(void) {
   sw = XDisplayWidth(d, s);  /* screen width for doing tiling */
   sh = XDisplayHeight(d, s); /* screen height for doing tiling */
 
-  monsetup();
+  monitor_setup();
 
   XSelectInput(d, root, SubstructureRedirectMask); /* select input from root window */
   XDefineCursor(d, root, XCreateFontCursor(d, 68)); /* define the cursor style so it looks normal */

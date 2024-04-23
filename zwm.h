@@ -83,33 +83,33 @@ struct monitor {
 };
 
 /* XEvents */
-void bpress(XEvent *e);
-void brelease(XEvent *e);
-void kpress(XEvent *e);
-void ndes(XEvent *e);
-void mreq(XEvent *e);
-void mnot(XEvent *e);
-void umnot(XEvent *e);
+void button_press(XEvent *e);
+void button_release(XEvent *e);
+void key_press(XEvent *e);
+void notify_destroy(XEvent *e);
+void map_request(XEvent *e);
+void map_notify(XEvent *e);
+void unmap_notify(XEvent *e);
 
 /* Window functions */
-void wadd(Window w, int floats);
-void wkill(const Arg arg);
-void wdel(Window w, int kill);
-void wfocus(client *c);
-void wprev(const Arg arg);
-void wnext(const Arg arg);
-void wmoveup(const Arg arg); /* move window up in workspace */
-void wmovedown(const Arg arg); /* move window down in workspace Notify functions */
-void wtype(client *c);
-void wswap(client *initial, client *swapto);
-void wfloatt(const Arg arg);
-int windowws(Window w);
+void window_add(Window w, int floats);
+void window_kill(const Arg arg);
+void window_delete(Window w, int kill);
+void window_focus(client *c);
+void window_prev(const Arg arg);
+void window_next(const Arg arg);
+void window_move_up(const Arg arg); /* move window up in workspace */
+void window_move_down(const Arg arg); /* move window down in workspace Notify functions */
+void window_type(client *c);
+void window_swap(client *initial, client *swapto);
+void window_float_toggle(const Arg arg);
+int window_workspace(Window w);
 
 /* Workspace functions */
-void wtos(const Arg arg);
-void sgo(const Arg arg);
-void mongo(const Arg arg);
-monitor *wactivemon(int space);
+void window_to_workspace(const Arg arg);
+void go_to_workspace(const Arg arg);
+void go_to_monitor(const Arg arg);
+monitor *workspaces_monitor(int space);
 
 /* WM functions */
 void input_grab(Window root);
@@ -122,15 +122,16 @@ void drag(XEvent *e);
 void center(client *c);
 Atom agetprop(client *c, Atom prop);
 void cleanup(void);
+
 /* Monitor functions */
-void monsetup(void);
-monitor *checkmonfocus(int x, int y, int w, int h);
+void monitor_setup(void);
+monitor *check_focused_monitor(int x, int y, int w, int h);
 
 static Atom netatom[NetLast];
 
 /* initialize initial client list, the workspace list, and cur client
  * pointer */
-static client *list = {0}, *slist[10] = {0}, *cur;
+static client *list = {0}, *slist[10] = {0}, *fslist[10] = {0}, *cur;
 /* create the ws (workspace) variable, screen width, screen height,
  * window x, and window y values
  * start numlock off as 0 */
@@ -151,14 +152,14 @@ static monitor *monlist = {0}, *selmon;
 
 /* List of valid XEvents */
 static void (*events[LASTEvent])(XEvent *e) = {
-  [DestroyNotify]     = ndes,
-  [ButtonPress]       = bpress,
-  [ButtonRelease]     = brelease,
-  [KeyPress]          = kpress,
+  [DestroyNotify]     = notify_destroy,
+  [ButtonPress]       = button_press,
+  [ButtonRelease]     = button_release,
+  [KeyPress]          = key_press,
   [MotionNotify]      = drag,
-  [UnmapNotify]       = umnot,
-  [MapRequest]        = mreq,
-  [MappingNotify]     = mnot};
+  [UnmapNotify]       = unmap_notify,
+  [MapRequest]        = map_request,
+  [MappingNotify]     = map_notify};
 
 #ifndef CONFIG_H
 /* Load config.h for custom user configs */
