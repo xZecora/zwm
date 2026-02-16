@@ -6,7 +6,7 @@
 - patches
 - Multi-Monitor (more or less)
 
-If you want something more, add it! If you want some simple functionality, you can probably make it work. I also have patches for it over at [zwm patches](https://git.vitrial.xyz/vitrial/zwm-patches) (currently on hold for the time being), so maybe what you want is there.
+If you want something more, add it! If you want some simple functionality, you can probably make it work. I also have patches for it over at [zwm patches](https://github.com/xzecora/zwm-patches) (currently on hold for the time being), so maybe what you want is there.
 
 # TODO
 - [x] add multi-monitor functionality
